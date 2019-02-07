@@ -4,10 +4,31 @@ import { Api, getApiRoute } from "./Api";
 
 export class Server {
 
+    /**
+     * Reference to the express application
+     *
+     * @private
+     * @type {express.Application}
+     * @memberof Server
+     */
     private _app: express.Application;
 
+    /**
+     * Port for express server to use
+     *
+     * @private
+     * @type {number}
+     * @memberof Server
+     */
     private _port: number;
 
+    /**
+     * API client
+     *
+     * @private
+     * @type {Api}
+     * @memberof Server
+     */
     private _api: Api;
 
     constructor(client: MongoClient, port: number = 5050) {

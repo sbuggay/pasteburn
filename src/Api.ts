@@ -17,8 +17,6 @@ export function getApiRoute(api: Api) {
     }
 
     const router = Router();
-
-
     router.use(bodyParser.json());
 
     router.get("/paste/:id", (req, res) => {
@@ -29,6 +27,8 @@ export function getApiRoute(api: Api) {
 
     router.post("/paste", (req, res) => {
         const data = req.body.data;
+        const expiry = req.body.expiry;
+        const burn = req.body.burn;
 
         api.addPaste(data).then((id) => {
             res.send(id);
@@ -46,7 +46,7 @@ export class Api {
         this._db = client.db(DB_NAME);
     }
 
-    public addPaste(data: string, expiry?: number, burn: boolean = false) {
+    public async addPaste(data: string, expiry?: number, burn: boolean = false) {
 
         // generate paste id
         const timestamp = Date.now();
@@ -66,16 +66,18 @@ export class Api {
             burn
         }
 
-        return this._db.collection(DB_POST_COLLECTION).insertOne({
-            ...paste,
-            id
-        }).then(() => {
-            return id;
-        });
+        await this._db.collection(DB_POST_COLLECTION).insertOne({ ...paste, id });
+
+        return id;
     }
 
     public async getPaste(id: string) {
         const paste = await this._db.collection(DB_POST_COLLECTION).findOne({ id }) as IPaste;
+
+        if (Date.now() > paste.expiry || paste.burn) {
+            this._db.collection(DB_POST_COLLECTION).deleteOne({ id });
+        }
+
         return paste;
     }
 
